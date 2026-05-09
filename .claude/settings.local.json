@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(cp -r /Users/shane/Desktop/TaskMuster/tmp/habit-app/. /Users/shane/Desktop/TaskMuster/)",
+      "Bash(rm -rf /Users/shane/Desktop/TaskMuster/tmp)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)"
+    ]
+  }
+}

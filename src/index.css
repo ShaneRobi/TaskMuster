@@ -1,0 +1,2 @@
+/* Base reset — variables and theming live in App.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
