@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { formatDisplay, addDays, today } from '../dateUtils';
 
@@ -30,13 +30,39 @@ export default function CheckIn({ date, log, habits, onUpdateLog, onNavigate }) 
   const todayStr = today();
   const isToday = date === todayStr;
 
+  // Local note state with debounced save
+  const [localNote, setLocalNote] = useState(log.note || '');
+  const timerRef = useRef(null);
+  const isEditingRef = useRef(false);
+  const logRef = useRef(log);
+
+  useEffect(() => { logRef.current = log; }, [log]);
+
+  // Sync note when log changes from outside (data load, date navigation)
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setLocalNote(log.note || '');
+    }
+  }, [log.note]);
+
+  useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
   const setHabit = (id, value) => {
     const newLog = { ...log, habits: { ...log.habits, [id]: value } };
     onUpdateLog(newLog);
   };
 
-  const setNote = (note) => {
-    onUpdateLog({ ...log, note });
+  const handleNoteChange = (e) => {
+    const val = e.target.value;
+    setLocalNote(val);
+    isEditingRef.current = true;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      isEditingRef.current = false;
+      onUpdateLog({ ...logRef.current, note: val });
+    }, 600);
   };
 
   return (
@@ -105,9 +131,9 @@ export default function CheckIn({ date, log, habits, onUpdateLog, onNavigate }) 
         <label className="note-label">Daily note</label>
         <textarea
           className="note-textarea"
-          placeholder="Optional note for this day..."
-          value={log.note || ''}
-          onChange={e => setNote(e.target.value)}
+          placeholder="Optional note for this day…"
+          value={localNote}
+          onChange={handleNoteChange}
           rows={3}
         />
       </div>

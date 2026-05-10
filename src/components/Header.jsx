@@ -1,12 +1,10 @@
-import { Sun, Moon, Flame } from 'lucide-react';
+import { Sun, Moon, Flame, LogOut } from 'lucide-react';
 import { today, toDateStr } from '../dateUtils';
 
 function computeStreaks(habits, allLogs) {
-  const todayStr = today();
-
   const habitStreak = (habitId, isMulti) => {
     let streak = 0;
-    let d = new Date();
+    const d = new Date();
     while (true) {
       const ds = toDateStr(d);
       const l = allLogs[ds];
@@ -21,7 +19,7 @@ function computeStreaks(habits, allLogs) {
 
   const overallStreak = () => {
     let streak = 0;
-    let d = new Date();
+    const d = new Date();
     while (true) {
       const ds = toDateStr(d);
       const l = allLogs[ds];
@@ -40,7 +38,7 @@ function computeStreaks(habits, allLogs) {
   return { habitStreak, overallStreak: overallStreak() };
 }
 
-export default function Header({ habits, allLogs, isDark, onToggleTheme }) {
+export default function Header({ habits, allLogs, isDark, onToggleTheme, user, onSignOut }) {
   const { habitStreak, overallStreak } = computeStreaks(habits, allLogs);
 
   return (
@@ -68,9 +66,19 @@ export default function Header({ habits, allLogs, isDark, onToggleTheme }) {
         })}
       </div>
 
-      <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
-        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
+      <div className="header-right">
+        {user && (
+          <div className="header-user">
+            <span className="header-user-email">{user.email}</span>
+            <button className="signout-btn" onClick={onSignOut} title="Sign out">
+              <LogOut size={15} />
+            </button>
+          </div>
+        )}
+        <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+      </div>
     </header>
   );
 }
