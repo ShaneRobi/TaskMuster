@@ -153,26 +153,30 @@ h2 { font-size: 15px; font-weight: 600; }
   padding: 20px;
 }
 
-.heatmap-wrapper { overflow-x: auto; }
+.heatmap-months-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 
-.heatmap-months {
-  display: grid;
-  grid-auto-flow: column;
-  margin-bottom: 4px;
-  font-size: 11px;
-  color: var(--text-muted);
+.heatmap-month-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .heatmap-month-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
   white-space: nowrap;
 }
 
-.heatmap-grid {
+.heatmap-month-cells {
   display: grid;
-  grid-template-rows: repeat(7, 13px);
-  grid-auto-flow: column;
+  grid-template-columns: repeat(7, 13px);
   gap: 3px;
-  width: max-content;
 }
 
 .heatmap-cell {
@@ -916,41 +920,66 @@ h2 { font-size: 15px; font-weight: 600; }
 .breakdown-heatmaps {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
 }
 
 .habit-heatmap-row {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .habit-heatmap-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
-  width: 120px;
-  flex-shrink: 0;
-  padding-top: 18px;
-  text-align: right;
 }
 
-.habit-heatmap-wrapper { overflow-x: auto; }
+.habit-months-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
-.habit-heatmap-months {
-  display: grid;
-  grid-auto-flow: column;
-  margin-bottom: 3px;
+.habit-month-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.habit-month-label {
   font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
+  text-align: center;
 }
 
-.mini-heatmap-grid {
+.habit-month-cells {
   display: grid;
-  grid-template-rows: repeat(7, 10px);
-  grid-auto-flow: column;
+  grid-template-columns: repeat(7, 9px);
   gap: 2px;
-  width: max-content;
+}
+
+.heatmap-cell-sm {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+
+.heatmap-cell-sm.empty {
+  cursor: default;
+  background: transparent !important;
+}
+
+.heatmap-cell-sm.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.heatmap-cell-sm:not(.empty):hover {
+  opacity: 0.75;
 }
 
 /* Stats grid view */

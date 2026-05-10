@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { yearDays, fromDateStr, toDateStr, today } from '../dateUtils';
+import { fromDateStr, toDateStr, today } from '../dateUtils';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -102,36 +102,25 @@ function computeHabitStats(habit, allLogs, todayStr) {
   return { totalCompletions, currentStreak, longestStreak, thisWeekCount, thisMonthCount, monthCompletionPct, subtypeCounts };
 }
 
-// ─── Mini per-habit heatmap ───────────────────────────────────────────────────
+// ─── Mini per-habit heatmap (month-separated) ────────────────────────────────
 
 function HabitHeatmap({ habit, allLogs, year, isDark, onCellClick, onSelectDate, selectedDate }) {
   const todayStr = today();
-  const days = useMemo(() => yearDays(year), [year]);
-  const jan1 = fromDateStr(`${year}-01-01`);
-  const startPad = jan1.getDay();
 
-  const weeks = useMemo(() => {
-    const cells = [];
-    for (let i = 0; i < startPad; i++) cells.push(null);
-    for (const d of days) cells.push(d);
-    const ws = [];
-    for (let i = 0; i < cells.length; i += 7) ws.push(cells.slice(i, i + 7));
-    return ws;
-  }, [days, startPad]);
-
-  const monthLabels = useMemo(() => {
-    const labels = [];
-    let lastMonth = -1;
-    weeks.forEach((week, wi) => {
-      for (const d of week) {
-        if (!d) continue;
-        const m = fromDateStr(d).getMonth();
-        if (m !== lastMonth) { labels.push({ month: m, week: wi }); lastMonth = m; }
-        break;
-      }
+  const months = useMemo(() => {
+    return Array.from({ length: 12 }, (_, month) => {
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const startPad = firstDay.getDay();
+      const cells = [
+        ...Array(startPad).fill(null),
+        ...Array.from({ length: daysInMonth }, (__, d) =>
+          toDateStr(new Date(year, month, d + 1))
+        ),
+      ];
+      return { month, cells };
     });
-    return labels;
-  }, [weeks]);
+  }, [year]);
 
   const getCellInfo = (dateStr) => {
     const l = allLogs[dateStr];
@@ -147,46 +136,39 @@ function HabitHeatmap({ habit, allLogs, year, isDark, onCellClick, onSelectDate,
   return (
     <div className="habit-heatmap-row">
       <span className="habit-heatmap-name">{habit.label}</span>
-      <div className="habit-heatmap-wrapper">
-        <div className="habit-heatmap-months" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gap: '2px', width: 'max-content' }}>
-          {monthLabels.map(({ month, week }) => (
-            <span key={month} className="heatmap-month-label" style={{ gridColumn: week + 1 }}>
-              {MONTH_NAMES[month]}
-            </span>
-          ))}
-        </div>
-        <div
-          className="mini-heatmap-grid"
-          style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)` }}
-        >
-          {weeks.map((week, wi) =>
-            week.map((dateStr, di) => {
-              if (!dateStr) {
-                return <div key={`pad-${wi}-${di}`} style={{ width: 10, height: 10, gridColumn: wi + 1, gridRow: di + 1 }} />;
-              }
-              const isFuture = dateStr > todayStr;
-              const isSelected = dateStr === selectedDate;
-              const { done, subtypeCount } = getCellInfo(dateStr);
-              const color = isFuture
-                ? (isDark ? '#222' : '#f0f0f0')
-                : habitCellColor(done, subtypeCount, isDark);
-              return (
-                <div
-                  key={dateStr}
-                  className={`heatmap-cell${isSelected ? ' selected' : ''}`}
-                  style={{ backgroundColor: color, gridColumn: wi + 1, gridRow: di + 1, width: 10, height: 10 }}
-                  title={`${dateStr}: ${done ? 'done' : 'not done'}${subtypeCount ? ` (${subtypeCount} types)` : ''}`}
-                  onClick={(e) => {
-                    if (!isFuture) {
-                      onCellClick(dateStr, e.currentTarget.getBoundingClientRect());
-                      onSelectDate(dateStr);
-                    }
-                  }}
-                />
-              );
-            })
-          )}
-        </div>
+      <div className="habit-months-container">
+        {months.map(({ month, cells }) => (
+          <div key={month} className="habit-month-block">
+            <div className="habit-month-label">{MONTH_NAMES[month]}</div>
+            <div className="habit-month-cells">
+              {cells.map((dateStr, i) => {
+                if (!dateStr) {
+                  return <div key={`pad-${month}-${i}`} className="heatmap-cell-sm empty" />;
+                }
+                const isFuture = dateStr > todayStr;
+                const isSelected = dateStr === selectedDate;
+                const { done, subtypeCount } = getCellInfo(dateStr);
+                const color = isFuture
+                  ? (isDark ? '#222' : '#f0f0f0')
+                  : habitCellColor(done, subtypeCount, isDark);
+                return (
+                  <div
+                    key={dateStr}
+                    className={`heatmap-cell-sm${isSelected ? ' selected' : ''}`}
+                    style={{ backgroundColor: color }}
+                    title={`${dateStr}: ${done ? 'done' : 'not done'}${subtypeCount ? ` (${subtypeCount} types)` : ''}`}
+                    onClick={(e) => {
+                      if (!isFuture) {
+                        onCellClick(dateStr, e.currentTarget.getBoundingClientRect());
+                        onSelectDate(dateStr);
+                      }
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -256,7 +238,7 @@ function HabitStatCard({ habit, stats }) {
 // ─── Main Breakdown component ─────────────────────────────────────────────────
 
 export default function HabitBreakdown({ habits, allLogs, isDark, onCellClick, onSelectDate, selectedDate }) {
-  const [tab, setTab] = useState('heatmaps');
+  const [tab, setTab] = useState('stats');
   const year = new Date().getFullYear();
   const todayStr = today();
 
