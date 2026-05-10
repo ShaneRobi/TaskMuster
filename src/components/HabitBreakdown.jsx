@@ -148,7 +148,7 @@ function HabitHeatmap({ habit, allLogs, year, isDark, onCellClick, onSelectDate,
     <div className="habit-heatmap-row">
       <span className="habit-heatmap-name">{habit.label}</span>
       <div className="habit-heatmap-wrapper">
-        <div className="habit-heatmap-months" style={{ gridTemplateColumns: `repeat(${weeks.length}, 12px)` }}>
+        <div className="habit-heatmap-months" style={{ gridTemplateColumns: `repeat(${weeks.length}, 10px)`, gap: '2px', width: 'max-content' }}>
           {monthLabels.map(({ month, week }) => (
             <span key={month} className="heatmap-month-label" style={{ gridColumn: week + 1 }}>
               {MONTH_NAMES[month]}

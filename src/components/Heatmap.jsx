@@ -64,7 +64,10 @@ export default function Heatmap({ year, completedCount, maxHabits, onCellClick, 
     <section className="heatmap-section">
       <h2 className="section-title">Activity — {year}</h2>
       <div className="heatmap-wrapper">
-        <div className="heatmap-months">
+        <div
+          className="heatmap-months"
+          style={{ gridTemplateColumns: `repeat(${weeks.length}, 13px)`, gap: '3px', width: 'max-content' }}
+        >
           {monthLabels.map(({ month, week }) => (
             <span
               key={month}
