@@ -44,7 +44,7 @@ export default function Header({ habits, allLogs, isDark, onToggleTheme, user, o
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="app-title">Task Muster</h1>
+        <h1 className="app-title">Habbit Rabbit</h1>
         <div className="overall-streak">
           <Flame size={18} className="flame-icon" />
           <span>{overallStreak} day{overallStreak !== 1 ? 's' : ''} streak</span>
@@ -58,7 +58,7 @@ export default function Header({ habits, allLogs, isDark, onToggleTheme, user, o
             <div key={h.id} className="habit-streak-pill">
               <span className="habit-streak-label">{h.label}</span>
               <span className="habit-streak-count">
-                <Flame size={12} />
+                <Flame size={10} />
                 {s}
               </span>
             </div>
