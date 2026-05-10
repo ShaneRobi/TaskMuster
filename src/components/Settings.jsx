@@ -94,7 +94,7 @@ export default function Settings({ open, onToggle, habits, onUpdateHabits }) {
     <section className="settings-section">
       <button className="settings-toggle" onClick={onToggle}>
         <GearIcon size={18} />
-        <span>Settings</span>
+        <span>Manage Habits & Tasks </span>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 

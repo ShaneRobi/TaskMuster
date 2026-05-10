@@ -41,7 +41,7 @@ export default function AuthScreen() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <h1 className="auth-title">Task Muster</h1>
+        <h1 className="auth-title">Habbit Rabbit</h1>
         <p className="auth-subtitle">Build your daily momentum</p>
 
         <div className="auth-tabs">

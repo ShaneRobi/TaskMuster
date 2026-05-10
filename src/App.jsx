@@ -168,7 +168,7 @@ export default function App() {
         ) : (
           <>
             <Heatmap
-              year={new Date().getFullYear()}
+              signupYear={user?.created_at ? new Date(user.created_at).getFullYear() : new Date().getFullYear()}
               completedCount={completedCount}
               maxHabits={habits.length}
               onCellClick={(dateStr, anchor) => setPopover({ dateStr, anchor })}
@@ -186,6 +186,13 @@ export default function App() {
               onNavigate={navigateDate}
             />
 
+            <Settings
+              open={settingsOpen}
+              onToggle={() => setSettingsOpen(o => !o)}
+              habits={habits}
+              onUpdateHabits={updateHabits}
+            />
+
             <Stats
               habits={habits}
               allLogs={allLogs}
@@ -199,13 +206,6 @@ export default function App() {
               onCellClick={handleCellClick}
               onSelectDate={(ds) => setSelectedDate(ds)}
               selectedDate={selectedDate}
-            />
-
-            <Settings
-              open={settingsOpen}
-              onToggle={() => setSettingsOpen(o => !o)}
-              habits={habits}
-              onUpdateHabits={updateHabits}
             />
           </>
         )}

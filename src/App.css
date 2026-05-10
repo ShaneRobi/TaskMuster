@@ -47,7 +47,7 @@ body {
 .app { min-height: 100vh; background: var(--bg); padding-bottom: 60px; }
 
 .container {
-  max-width: 960px;
+  max-width: 780px;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -93,23 +93,32 @@ h2 { font-size: 15px; font-weight: 600; }
 .flame-icon { color: var(--flame); }
 
 .habit-streaks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .habit-streak-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: var(--pill-bg);
-  border-radius: 12px;
-  padding: 3px 10px;
-  font-size: 12px;
+  border-radius: 8px;
+  padding: 2px 7px;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.habit-streak-label { color: var(--text-muted); }
+.habit-streak-label {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .habit-streak-count {
   display: flex;
@@ -117,6 +126,7 @@ h2 { font-size: 15px; font-weight: 600; }
   gap: 2px;
   font-weight: 700;
   color: var(--flame);
+  flex-shrink: 0;
 }
 
 .theme-toggle {
@@ -153,30 +163,134 @@ h2 { font-size: 15px; font-weight: 600; }
   padding: 20px;
 }
 
-.heatmap-months-container {
+.heatmap-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.heatmap-month-block {
+.heatmap-title-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
 }
 
-.heatmap-month-label {
+.heatmap-title {
+  margin-bottom: 0;
+}
+
+.month-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.month-nav-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+}
+
+.month-nav-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.month-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.heatmap-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-toggle-btn {
   font-size: 11px;
   font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
   color: var(--text-muted);
-  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
   white-space: nowrap;
 }
 
+.view-toggle-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.year-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.year-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.year-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Month view — horizontal strip, wraps to 2 lines on narrow screens */
 .heatmap-month-cells {
-  display: grid;
-  grid-template-columns: repeat(7, 13px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 3px;
+}
+
+.heatmap-month-cells .heatmap-cell {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+}
+
+/* Year view */
+.heatmap-year-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-year-grid {
+  display: grid;
+  gap: 2px;
+}
+
+.heatmap-year-month-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  height: 12px;
+  line-height: 12px;
 }
 
 .heatmap-cell {
@@ -185,6 +299,12 @@ h2 { font-size: 15px; font-weight: 600; }
   border-radius: 3px;
   cursor: pointer;
   transition: transform 0.1s, outline 0.1s;
+}
+
+/* Year-view cells are slightly smaller */
+.heatmap-year-grid .heatmap-cell {
+  width: 11px;
+  height: 11px;
 }
 
 .heatmap-cell.empty {
