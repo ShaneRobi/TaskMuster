@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { formatDisplay } from '../dateUtils';
 
-export default function HeatmapPopover({ dateStr, anchor, log, habits, onClose }) {
+export default function HeatmapPopover({ dateStr, anchor, log, habits, allHabitsMap, onClose }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -13,7 +13,21 @@ export default function HeatmapPopover({ dateStr, anchor, log, habits, onClose }
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  // position below/above anchor
+  const activeHabitIds = new Set(habits.map(h => h.id));
+  const archivedCompletions = Object.entries(log.habits || {})
+    .filter(([id, v]) => !activeHabitIds.has(id) && (Array.isArray(v) ? v.length > 0 : !!v))
+    .map(([id, v]) => ({
+      id,
+      label: allHabitsMap?.[id]?.label || id,
+      type: allHabitsMap?.[id]?.type || 'simple',
+      v,
+    }));
+
+  const allDone = habits.every(h => {
+    const v = log.habits?.[h.id];
+    return h.type === 'multi' ? !(Array.isArray(v) && v.length > 0) : !v;
+  });
+
   const style = {
     position: 'fixed',
     top: anchor.bottom + 8,
@@ -42,15 +56,28 @@ export default function HeatmapPopover({ dateStr, anchor, log, habits, onClose }
           );
         })}
       </ul>
+      {archivedCompletions.length > 0 && (
+        <>
+          <div className="popover-archived-label">Archived</div>
+          <ul className="popover-habits">
+            {archivedCompletions.map(({ id, label, type, v }) => (
+              <li key={id} className="popover-habit done archived">
+                <span className="popover-check">✓</span>
+                <span>{label}</span>
+                {type === 'multi' && Array.isArray(v) && v.length > 0 && (
+                  <span className="popover-subtypes">({v.join(', ')})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {log.note && (
         <div className="popover-note">
           <span className="popover-note-label">Note:</span> {log.note}
         </div>
       )}
-      {!log.note && habits.every(h => {
-        const v = log.habits?.[h.id];
-        return h.type === 'multi' ? !(Array.isArray(v) && v.length > 0) : !v;
-      }) && (
+      {!log.note && allDone && archivedCompletions.length === 0 && (
         <p className="popover-empty">No activity logged.</p>
       )}
     </div>

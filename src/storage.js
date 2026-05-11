@@ -33,7 +33,18 @@ export async function fetchHabits(userId) {
 }
 
 export async function saveHabits(userId, habits) {
-  await supabase.from('habit_configs').delete().eq('user_id', userId);
+  // Soft-delete habits no longer in the active list (preserves historical label/type)
+  if (habits.length > 0) {
+    const activeIds = habits.map(h => h.id);
+    await supabase
+      .from('habit_configs')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+      .not('habit_id', 'in', `(${activeIds.join(',')})`);
+  } else {
+    await supabase.from('habit_configs').update({ is_active: false }).eq('user_id', userId);
+  }
+
   if (!habits.length) return;
 
   const rows = habits.map((h, i) => ({
@@ -46,7 +57,27 @@ export async function saveHabits(userId, habits) {
     sort_order: i,
   }));
 
-  await supabase.from('habit_configs').insert(rows);
+  await supabase.from('habit_configs').upsert(rows, { onConflict: 'user_id,habit_id' });
+}
+
+export async function fetchAllHabitsMap(userId) {
+  const { data, error } = await supabase
+    .from('habit_configs')
+    .select('habit_id, label, habit_type, options')
+    .eq('user_id', userId);
+
+  if (error || !data) return {};
+
+  const map = {};
+  for (const row of data) {
+    map[row.habit_id] = {
+      id: row.habit_id,
+      label: row.label,
+      type: row.habit_type,
+      options: row.options?.length ? row.options : undefined,
+    };
+  }
+  return map;
 }
 
 function rowsToAllLogs(rows) {

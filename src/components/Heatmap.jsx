@@ -101,7 +101,7 @@ export default function Heatmap({ signupYear, completedCount, maxHabits, onCellC
         key={dateStr}
         className={`heatmap-cell${isSelected ? ' selected' : ''}`}
         style={{ backgroundColor: color }}
-        title={`${dateStr}: ${count}/${maxHabits} habits`}
+        title={`${dateStr}: ${count} habit${count !== 1 ? 's' : ''} completed`}
         onClick={(e) => {
           if (!isFuture) {
             onCellClick(dateStr, e.currentTarget.getBoundingClientRect());

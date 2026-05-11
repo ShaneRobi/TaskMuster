@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabaseClient';
-import { DEFAULT_HABITS, fetchHabits, saveHabits, fetchAllLogs, upsertLog, fetchPrefs, savePrefs } from './storage';
+import { DEFAULT_HABITS, fetchHabits, saveHabits, fetchAllHabitsMap, fetchAllLogs, upsertLog, fetchPrefs, savePrefs } from './storage';
 import { today } from './dateUtils';
 import AuthScreen from './components/AuthScreen';
 import Header from './components/Header';
@@ -18,6 +18,7 @@ export default function App() {
   const [dataLoading, setDataLoading] = useState(false);
 
   const [habits, setHabits] = useState(DEFAULT_HABITS);
+  const [allHabitsMap, setAllHabitsMap] = useState({});
   const [prefs, setPrefs] = useState({ theme: 'dark' });
   const [selectedDate, setSelectedDate] = useState(() => today());
   const [log, setLog] = useState({ habits: {}, note: '' });
@@ -62,12 +63,19 @@ export default function App() {
       fetchHabits(user.id),
       fetchAllLogs(user.id),
       fetchPrefs(user.id),
-    ]).then(([habitsFromDB, logs, p]) => {
+      fetchAllHabitsMap(user.id),
+    ]).then(([habitsFromDB, logs, p, habitsMap]) => {
       const finalHabits = habitsFromDB || DEFAULT_HABITS;
       if (!habitsFromDB) {
         saveHabits(user.id, DEFAULT_HABITS);
       }
       setHabits(finalHabits);
+      // Seed map with active habits so it's populated even for first-time users
+      const finalMap = { ...habitsMap };
+      for (const h of finalHabits) {
+        if (!finalMap[h.id]) finalMap[h.id] = h;
+      }
+      setAllHabitsMap(finalMap);
       setAllLogs(logs);
       setLog(logs[curDate] || { habits: {}, note: '' });
       setPrefs(p);
@@ -91,6 +99,12 @@ export default function App() {
 
   const updateHabits = useCallback(async (newHabits) => {
     setHabits(newHabits);
+    // Add/update active habits in the map; archived entries are preserved
+    setAllHabitsMap(prev => {
+      const updated = { ...prev };
+      for (const h of newHabits) updated[h.id] = h;
+      return updated;
+    });
     if (user) {
       await saveHabits(user.id, newHabits);
     }
@@ -108,16 +122,11 @@ export default function App() {
     const l = allLogs[dateStr];
     if (!l) return 0;
     let count = 0;
-    for (const h of habits) {
-      const v = l.habits?.[h.id];
-      if (h.type === 'multi') {
-        if (Array.isArray(v) && v.length > 0) count++;
-      } else {
-        if (v) count++;
-      }
+    for (const v of Object.values(l.habits || {})) {
+      if (Array.isArray(v) ? v.length > 0 : !!v) count++;
     }
     return count;
-  }, [allLogs, habits]);
+  }, [allLogs]);
 
   const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
@@ -217,6 +226,7 @@ export default function App() {
           anchor={popover.anchor}
           log={allLogs[popover.dateStr] || { habits: {}, note: '' }}
           habits={habits}
+          allHabitsMap={allHabitsMap}
           onClose={() => setPopover(null)}
         />
       )}
