@@ -792,6 +792,22 @@ h2 { font-size: 15px; font-weight: 600; }
   margin-top: 6px;
 }
 
+.popover-archived-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-top: 8px;
+  margin-bottom: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.popover-habit.archived {
+  opacity: 0.6;
+}
+
 /* ─── Auth Screen ─── */
 .auth-screen {
   min-height: 100vh;
