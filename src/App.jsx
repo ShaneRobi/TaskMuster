@@ -7,7 +7,6 @@ import Header from './components/Header';
 import Heatmap from './components/Heatmap';
 import CheckIn from './components/CheckIn';
 import Stats from './components/Stats';
-import Settings from './components/Settings';
 import HeatmapPopover from './components/HeatmapPopover';
 import HabitBreakdown from './components/HabitBreakdown';
 import './App.css';
@@ -193,12 +192,8 @@ export default function App() {
               habits={habits}
               onUpdateLog={updateLog}
               onNavigate={navigateDate}
-            />
-
-            <Settings
-              open={settingsOpen}
-              onToggle={() => setSettingsOpen(o => !o)}
-              habits={habits}
+              settingsOpen={settingsOpen}
+              onToggleSettings={() => setSettingsOpen(o => !o)}
               onUpdateHabits={updateHabits}
             />
 

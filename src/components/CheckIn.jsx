@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { formatDisplay, addDays, today } from '../dateUtils';
+import Settings from './Settings';
 
 function WorkoutPicker({ options, selected, onChange }) {
   const toggle = (opt) => {
@@ -26,7 +27,7 @@ function WorkoutPicker({ options, selected, onChange }) {
   );
 }
 
-export default function CheckIn({ date, log, habits, onUpdateLog, onNavigate }) {
+export default function CheckIn({ date, log, habits, onUpdateLog, onNavigate, settingsOpen, onToggleSettings, onUpdateHabits }) {
   const todayStr = today();
   const isToday = date === todayStr;
 
@@ -137,6 +138,13 @@ export default function CheckIn({ date, log, habits, onUpdateLog, onNavigate }) 
           rows={3}
         />
       </div>
+
+      <Settings
+        open={settingsOpen}
+        onToggle={onToggleSettings}
+        habits={habits}
+        onUpdateHabits={onUpdateHabits}
+      />
     </section>
   );
 }
