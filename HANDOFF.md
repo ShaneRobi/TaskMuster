@@ -74,3 +74,99 @@ npx capacitor-assets generate --ios
 - **Supabase anon key** in `.env` is safe to ship — it's a public client key protected by RLS
 - The `ios/` directory is committed to git and should stay that way
 - Apple accepts WebView-based apps in the Productivity and Health & Fitness categories
+
+---
+
+---
+
+# Session 2 — Bug Fixes & Documentation (2026-05-23)
+
+## What was done this session
+
+Investigated and fixed a state persistence bug, cleaned up a React anti-pattern, and updated project documentation.
+
+---
+
+## Bug 1 (Fixed): Tab switch causes full app reset
+
+### Symptom
+Every time the user switched to another browser tab and returned, the app showed a loading spinner and re-fetched all data — making it look like a complete reset.
+
+### Root cause
+Supabase's JavaScript client (`@supabase/auth-js`) internally registers a `visibilitychange` listener during initialization. Every time the browser transitions from hidden → visible (i.e., tab switch back), Supabase calls `_recoverAndRefresh()`, which unconditionally fires a `SIGNED_IN` auth event with a freshly-deserialized session from localStorage.
+
+The app's `onAuthStateChange` handler was calling `setUser(session?.user ?? null)` for every event. Since each `SIGNED_IN` delivers a brand-new JavaScript object (even for the same user), React saw `Object.is(oldUser, newUser) === false`, triggering a re-render and re-running the `[user]` data-loading effect in `App.jsx`. That effect calls `setDataLoading(true)` and refetches all habits, logs, and preferences from Supabase — the visible "reset".
+
+### Fix — `src/App.jsx` lines 41–51
+
+Changed the `onAuthStateChange` handler to use a **functional `setUser` update** that compares user IDs and returns the existing object reference when nothing has actually changed:
+
+```js
+// Before
+supabase.auth.onAuthStateChange((_event, session) => {
+  setUser(session?.user ?? null);
+});
+
+// After
+supabase.auth.onAuthStateChange((_event, session) => {
+  setUser(prev => {
+    const nextId = session?.user?.id ?? null;
+    if ((prev?.id ?? null) === nextId) return prev; // same user → bail out
+    return session?.user ?? null;
+  });
+});
+```
+
+When the tab-switch `SIGNED_IN` fires, `prev.id === session.user.id`, so `setUser` returns `prev` (same reference). React's bail-out optimization detects no state change, skips the re-render, and the data-load effect never fires.
+
+All other auth transitions work correctly:
+- Genuine sign-in: `prev` is `null`, new ID present → stores new user → data loads
+- Sign-out: `session?.user` is `null`, IDs differ → stores `null` → data clears
+- `TOKEN_REFRESHED`: same user ID → bail out
+
+---
+
+## Bug 2 (Fixed): Date navigation remounts CheckIn component
+
+### Symptom
+Navigating between dates (via chevron arrows or heatmap cell click) would reset the note textarea and silently cancel any in-progress debounced note saves (600ms timer).
+
+### Root cause
+`<CheckIn>` in `App.jsx` had `key={selectedDate}`. React uses the `key` prop as a component identity signal — changing it causes the entire component subtree to unmount and remount. This destroyed local state (`localNote`, `timerRef`, `isEditingRef`) every time the date changed.
+
+`CheckIn` already has proper `useEffect` hooks (`[log]` and `[log.note]`) to sync the note textarea when the date or log prop changes from the parent. The `key` was redundant and harmful.
+
+### Fix — `src/App.jsx` line 189
+
+Removed the `key` prop:
+
+```jsx
+// Before
+<CheckIn key={selectedDate} date={selectedDate} ... />
+
+// After
+<CheckIn date={selectedDate} ... />
+```
+
+`CheckIn` stays mounted across date navigation and syncs via its existing effects.
+
+---
+
+## Documentation updated
+
+### `README.md`
+- Renamed project title from "TaskMuster" to "Habit Rabbit"
+- Added **Architecture notes** section explaining:
+  - State management approach (all state in `App.jsx`, no external library)
+  - Why the `onAuthStateChange` handler uses a functional update (documents the Supabase tab-focus behavior for future maintainers)
+  - Data flow from sign-in through user actions and date navigation
+
+---
+
+## Files changed
+
+| File | Change |
+|------|--------|
+| `src/App.jsx` | Fixed `onAuthStateChange` handler (functional `setUser` with ID comparison); removed `key={selectedDate}` from `<CheckIn>` |
+| `README.md` | Renamed to Habit Rabbit; added Architecture notes section |
+| `HANDOFF.md` | Added this session log |

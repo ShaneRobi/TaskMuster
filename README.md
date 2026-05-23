@@ -1,6 +1,6 @@
-# TaskMuster
+# Habit Rabbit
 
-A daily habit and task tracking app built with React, Vite, and Supabase.
+A daily habit tracking app built with React, Vite, and Supabase.
 
 ## Features
 
@@ -63,3 +63,14 @@ src/
 resources/              — source images for icon/splash generation (1024×1024 icon.png)
 ios/                    — generated Xcode project (Capacitor)
 ```
+
+## Architecture notes
+
+**State management** — All app state lives in `App.jsx` (no external state library). Auth state, habits, logs, and preferences are fetched once on sign-in and updated optimistically on user actions.
+
+**Auth / Supabase session handling** — Supabase's JS client internally fires a `SIGNED_IN` event on every browser tab-focus via its `visibilitychange` → `_recoverAndRefresh()` chain. The `onAuthStateChange` handler uses a functional `setUser` update that compares user IDs and bails out when the user hasn't changed, preventing spurious data reloads on tab switch.
+
+**Data flow**
+1. User signs in → `onAuthStateChange` fires with a new user ID → `[user]` effect fetches all data in parallel
+2. User actions (check habit, edit note, change theme) → optimistic local state update → async Supabase write
+3. Date navigation → `[selectedDate, allLogs]` effect syncs the active log; `CheckIn` stays mounted and syncs via its own effects

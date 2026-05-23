@@ -39,7 +39,15 @@ export default function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      // Use functional update: if the user ID hasn't changed (e.g. TOKEN_REFRESHED or
+      // the SIGNED_IN Supabase fires on every tab-switch-back via its internal
+      // visibilitychange → _recoverAndRefresh() chain), return the existing object
+      // reference so React bails out and the [user] data-load effect never re-fires.
+      setUser(prev => {
+        const nextId = session?.user?.id ?? null;
+        if ((prev?.id ?? null) === nextId) return prev;
+        return session?.user ?? null;
+      });
     });
 
     return () => subscription.unsubscribe();
@@ -186,7 +194,6 @@ export default function App() {
             />
 
             <CheckIn
-              key={selectedDate}
               date={selectedDate}
               log={log}
               habits={habits}
