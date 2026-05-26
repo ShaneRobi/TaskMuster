@@ -65,20 +65,25 @@ function EditRow({ habit, onSave, onCancel }) {
 export default function Settings({ open, onToggle, habits, onUpdateHabits }) {
   const [newLabel, setNewLabel] = useState('');
   const [newType, setNewType] = useState('simple');
+  const [newOptionsStr, setNewOptionsStr] = useState(WORKOUT_DEFAULTS.join(', '));
   const [editingId, setEditingId] = useState(null);
 
   const addHabit = () => {
     const label = newLabel.trim();
     if (!label) return;
+    const options = newType === 'multi'
+      ? newOptionsStr.split(',').map(s => s.trim()).filter(Boolean)
+      : undefined;
     const habit = {
       id: generateId(),
       label,
       type: newType,
-      ...(newType === 'multi' ? { options: WORKOUT_DEFAULTS } : {}),
+      ...(newType === 'multi' ? { options: options.length ? options : WORKOUT_DEFAULTS } : {}),
     };
     onUpdateHabits([...habits, habit]);
     setNewLabel('');
     setNewType('simple');
+    setNewOptionsStr(WORKOUT_DEFAULTS.join(', '));
   };
 
   const removeHabit = (id) => {
@@ -154,6 +159,14 @@ export default function Settings({ open, onToggle, habits, onUpdateHabits }) {
               Add
             </button>
           </div>
+          {newType === 'multi' && (
+            <input
+              className="add-habit-input edit-options-input"
+              value={newOptionsStr}
+              onChange={e => setNewOptionsStr(e.target.value)}
+              placeholder="Options (comma separated)"
+            />
+          )}
         </div>
       )}
     </section>
