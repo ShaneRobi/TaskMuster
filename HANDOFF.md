@@ -170,3 +170,55 @@ Removed the `key` prop:
 | `src/App.jsx` | Fixed `onAuthStateChange` handler (functional `setUser` with ID comparison); removed `key={selectedDate}` from `<CheckIn>` |
 | `README.md` | Renamed to Habit Rabbit; added Architecture notes section |
 | `HANDOFF.md` | Added this session log |
+
+---
+
+# Session 3 — Multi-task Creation Fix (2026-05-26)
+
+## What was done this session
+
+Fixed a UX bug where users could not configure the task options when creating a new multi-select task.
+
+---
+
+## Bug Fixed: Multi-task options not configurable during creation
+
+### Symptom
+When creating a new Multi-select task in the "Manage Habits & Tasks" panel, there was no way to enter custom options. The task was always created with the hardcoded `WORKOUT_DEFAULTS` list (`Running`, `Kettlebell`, `Calisthenics`, etc.), and the user had to edit the task after creation to change the options.
+
+### Root cause
+The "add new habit" row in `Settings.jsx` only exposed a name input and a type dropdown. When `newType === 'multi'` was selected, `addHabit()` silently fell back to `WORKOUT_DEFAULTS` with no options input visible in the UI. The `EditRow` component (used for editing existing habits) did show an options field — the creation form just never had one.
+
+### Fix — `src/components/Settings.jsx`
+
+Three changes:
+
+1. **Added `newOptionsStr` state** — initialised to `WORKOUT_DEFAULTS.join(', ')` so the field is pre-populated with sensible defaults but fully editable. Resets to defaults after each successful add.
+
+2. **`addHabit` reads the options field** — parses the comma-separated string into an array instead of hardcoding `WORKOUT_DEFAULTS`.
+
+3. **Options input rendered conditionally** — when "Multi-select" is chosen in the type dropdown, a comma-separated options input appears below the add row (matching the `EditRow` pattern), so the user can set their tasks before clicking Add.
+
+```jsx
+// New state
+const [newOptionsStr, setNewOptionsStr] = useState(WORKOUT_DEFAULTS.join(', '));
+
+// Options input shown below the add row when type === 'multi'
+{newType === 'multi' && (
+  <input
+    className="add-habit-input edit-options-input"
+    value={newOptionsStr}
+    onChange={e => setNewOptionsStr(e.target.value)}
+    placeholder="Options (comma separated)"
+  />
+)}
+```
+
+---
+
+## Files changed
+
+| File | Change |
+|------|--------|
+| `src/components/Settings.jsx` | Added `newOptionsStr` state; `addHabit` parses options from input; options field shown during creation when type is multi-select |
+| `HANDOFF.md` | Added this session log |
