@@ -14,6 +14,17 @@ export function today() {
   return toDateStr(new Date());
 }
 
+export function todayInTimeZone(timeZone = 'Asia/Singapore', date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 export function formatDisplay(dateStr) {
   const d = fromDateStr(dateStr);
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -43,6 +54,5 @@ export function startOfWeek(dateStr) {
 }
 
 export function isoWeek(dateStr) {
-  const d = fromDateStr(dateStr);
   return startOfWeek(dateStr);
 }

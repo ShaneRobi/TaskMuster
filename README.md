@@ -10,6 +10,10 @@ A daily habit tracking app built with React, Vite, and Supabase.
 - **Habit management** — Create, edit, and delete habits; historical logs are preserved after deletion
 - **Auth** — Email/password authentication via Supabase
 - **Themes** — Dark and light mode
+- **Two workspaces** — Switch between the original habit tracker and the Quant Developer Accountability workspace
+- **Evidence-gated daily contract** — Track base work, capped recovery, credited effort, and exact completion causes across five skill tracks
+- **Durable debt and curriculum queue** — Missed effort remains visible, while unfinished learning items keep their identity and dependencies
+- **Weekly readiness review** — Inspect base coverage, evidence rate, roadmap proof, and the 12-week progression
 
 ## Tech stack
 
@@ -56,7 +60,9 @@ src/
     HabitBreakdown.jsx  — sub-type breakdown for multi-select habits
     Header.jsx          — top nav / theme toggle
     Settings.jsx        — habit management
+    Accountability.jsx  — daily contract, debt, queue, and weekly review
   App.jsx               — root component, auth + data loading
+  accountabilityStore.js — accountability rules and device-local snapshots
   storage.js            — Supabase database operations
   supabaseClient.js     — Supabase client init
   dateUtils.js          — date helpers
