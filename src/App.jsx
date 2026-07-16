@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { CalendarCheck2, Crosshair } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import { DEFAULT_HABITS, fetchHabits, saveHabits, fetchAllHabitsMap, fetchAllLogs, upsertLog, fetchPrefs, savePrefs } from './storage';
 import { today } from './dateUtils';
@@ -9,9 +10,15 @@ import CheckIn from './components/CheckIn';
 import Stats from './components/Stats';
 import HeatmapPopover from './components/HeatmapPopover';
 import HabitBreakdown from './components/HabitBreakdown';
+import Accountability from './components/Accountability';
 import './App.css';
 
 export default function App() {
+  const isAccountabilityPreview = import.meta.env.DEV
+    && new URLSearchParams(window.location.search).get('preview') === 'accountability';
+  const previewUser = isAccountabilityPreview
+    ? { id: 'local-preview', email: 'preview@habit-rabbit.local', created_at: new Date().toISOString() }
+    : null;
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
@@ -24,6 +31,7 @@ export default function App() {
   const [allLogs, setAllLogs] = useState({});
   const [popover, setPopover] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeWorkspace, setActiveWorkspace] = useState('habits');
 
   const isDark = prefs.theme === 'dark';
 
@@ -93,7 +101,6 @@ export default function App() {
   // Keep log in sync when selectedDate or allLogs changes
   useEffect(() => {
     setLog(allLogs[selectedDate] || { habits: {}, note: '' });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, allLogs]);
 
   const updateLog = useCallback(async (newLog) => {
@@ -150,7 +157,14 @@ export default function App() {
     setSelectedDate(dateStr);
   }, []);
 
-  if (authLoading) {
+  const changeWorkspace = useCallback((workspace) => {
+    setActiveWorkspace(workspace);
+    setPopover(null);
+  }, []);
+
+  const activeUser = previewUser || user;
+
+  if (authLoading && !isAccountabilityPreview) {
     return (
       <div className="app-loading">
         <div className="app-loading-spinner" />
@@ -159,22 +173,45 @@ export default function App() {
     );
   }
 
-  if (!user) {
+  if (!activeUser) {
     return <AuthScreen />;
   }
 
   return (
     <div className={`app ${isDark ? 'dark' : 'light'}`}>
-      <div className="container">
+      <div className={`container ${activeWorkspace === 'accountability' ? 'container-wide' : ''}`}>
         <Header
           habits={habits}
           allLogs={allLogs}
           isDark={isDark}
           onToggleTheme={toggleTheme}
           selectedDate={selectedDate}
-          user={user}
+          user={isAccountabilityPreview ? null : user}
           onSignOut={handleSignOut}
         />
+
+        <nav className="workspace-tabs" aria-label="Habit Rabbit workspaces" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeWorkspace === 'habits'}
+            className={`workspace-tab ${activeWorkspace === 'habits' ? 'active' : ''}`}
+            onClick={() => changeWorkspace('habits')}
+          >
+            <CalendarCheck2 size={17} />
+            <span><strong>Habits</strong><small>Daily check-in & streaks</small></span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeWorkspace === 'accountability'}
+            className={`workspace-tab ${activeWorkspace === 'accountability' ? 'active' : ''}`}
+            onClick={() => changeWorkspace('accountability')}
+          >
+            <Crosshair size={17} />
+            <span><strong>Accountability</strong><small>Quant developer path</small></span>
+          </button>
+        </nav>
 
         {dataLoading ? (
           <div className="data-loading">
@@ -182,47 +219,51 @@ export default function App() {
             <span>Loading your data…</span>
           </div>
         ) : (
-          <>
-            <Heatmap
-              signupYear={user?.created_at ? new Date(user.created_at).getFullYear() : new Date().getFullYear()}
-              completedCount={completedCount}
-              maxHabits={habits.length}
-              onCellClick={(dateStr, anchor) => setPopover({ dateStr, anchor })}
-              selectedDate={selectedDate}
-              onSelectDate={(ds) => setSelectedDate(ds)}
-              isDark={isDark}
-            />
+          activeWorkspace === 'habits' ? (
+            <>
+              <Heatmap
+                signupYear={activeUser?.created_at ? new Date(activeUser.created_at).getFullYear() : new Date().getFullYear()}
+                completedCount={completedCount}
+                maxHabits={habits.length}
+                onCellClick={(dateStr, anchor) => setPopover({ dateStr, anchor })}
+                selectedDate={selectedDate}
+                onSelectDate={(ds) => setSelectedDate(ds)}
+                isDark={isDark}
+              />
 
-            <CheckIn
-              date={selectedDate}
-              log={log}
-              habits={habits}
-              onUpdateLog={updateLog}
-              onNavigate={navigateDate}
-              settingsOpen={settingsOpen}
-              onToggleSettings={() => setSettingsOpen(o => !o)}
-              onUpdateHabits={updateHabits}
-            />
+              <CheckIn
+                date={selectedDate}
+                log={log}
+                habits={habits}
+                onUpdateLog={updateLog}
+                onNavigate={navigateDate}
+                settingsOpen={settingsOpen}
+                onToggleSettings={() => setSettingsOpen(o => !o)}
+                onUpdateHabits={updateHabits}
+              />
 
-            <Stats
-              habits={habits}
-              allLogs={allLogs}
-              todayStr={today()}
-            />
+              <Stats
+                habits={habits}
+                allLogs={allLogs}
+                todayStr={today()}
+              />
 
-            <HabitBreakdown
-              habits={habits}
-              allLogs={allLogs}
-              isDark={isDark}
-              onCellClick={handleCellClick}
-              onSelectDate={(ds) => setSelectedDate(ds)}
-              selectedDate={selectedDate}
-            />
-          </>
+              <HabitBreakdown
+                habits={habits}
+                allLogs={allLogs}
+                isDark={isDark}
+                onCellClick={handleCellClick}
+                onSelectDate={(ds) => setSelectedDate(ds)}
+                selectedDate={selectedDate}
+              />
+            </>
+          ) : (
+            <Accountability userId={activeUser.id} />
+          )
         )}
       </div>
 
-      {popover && (
+      {activeWorkspace === 'habits' && popover && (
         <HeatmapPopover
           dateStr={popover.dateStr}
           anchor={popover.anchor}

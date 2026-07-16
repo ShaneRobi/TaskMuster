@@ -1,5 +1,5 @@
 import { Sun, Moon, Flame, LogOut } from 'lucide-react';
-import { today, toDateStr } from '../dateUtils';
+import { toDateStr } from '../dateUtils';
 
 function computeStreaks(habits, allLogs) {
   const habitStreak = (habitId, isMulti) => {
@@ -44,7 +44,7 @@ export default function Header({ habits, allLogs, isDark, onToggleTheme, user, o
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="app-title">Habbit Rabbit</h1>
+        <h1 className="app-title">Habit Rabbit</h1>
         <div className="overall-streak">
           <Flame size={18} className="flame-icon" />
           <span>{overallStreak} day{overallStreak !== 1 ? 's' : ''} streak</span>
