@@ -18,7 +18,19 @@
       "mcp__plugin_supabase_supabase__list_tables",
       "Bash(npx vite *)",
       "Bash(npx cap *)",
-      "Bash(find *)"
+      "Bash(find *)",
+      "Skill(run)",
+      "Bash(curl -s http://localhost:5199)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('playwright'\\)\")",
+      "Bash(npx playwright *)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/mobile_auth.png --window-size=390,844 --disable-gpu --no-sandbox http://localhost:5199)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/mobile_auth2.png --window-size=390,844 --disable-gpu --no-sandbox --virtual-time-budget=4000 http://localhost:5199)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/add_btn_mobile.png --window-size=390,200 --disable-gpu --no-sandbox --virtual-time-budget=2000 file:///tmp/test_add_btn.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/add_btn_mobile2.png --window-size=390,300 --disable-gpu --no-sandbox --virtual-time-budget=2000 file:///tmp/test_add_btn.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/add_btn_mobile3.png --window-size=390,500 --disable-gpu --no-sandbox --virtual-time-budget=2000 file:///tmp/test_add_btn.html)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --screenshot=/tmp/add_btn_fixed.png --window-size=390,280 --disable-gpu --no-sandbox --virtual-time-budget=2000 file:///tmp/test_add_btn.html)",
+      "Bash(pkill -f \"vite --port 5199\")"
     ]
   }
 }
