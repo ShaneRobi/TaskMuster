@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { CalendarCheck2, Crosshair } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import { DEFAULT_HABITS, fetchHabits, saveHabits, fetchAllHabitsMap, fetchAllLogs, upsertLog, fetchPrefs, savePrefs } from './storage';
@@ -31,9 +32,15 @@ export default function App() {
   const [allLogs, setAllLogs] = useState({});
   const [popover, setPopover] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState('habits');
+  const location = useLocation();
+  const activeWorkspace = location.pathname.startsWith('/accountability') ? 'accountability' : 'habits';
 
   const isDark = prefs.theme === 'dark';
+
+  // Close any open popover when switching workspaces
+  useEffect(() => {
+    setPopover(null);
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', prefs.theme);
@@ -157,11 +164,6 @@ export default function App() {
     setSelectedDate(dateStr);
   }, []);
 
-  const changeWorkspace = useCallback((workspace) => {
-    setActiveWorkspace(workspace);
-    setPopover(null);
-  }, []);
-
   const activeUser = previewUser || user;
 
   if (authLoading && !isAccountabilityPreview) {
@@ -190,27 +192,21 @@ export default function App() {
           onSignOut={handleSignOut}
         />
 
-        <nav className="workspace-tabs" aria-label="Habit Rabbit workspaces" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeWorkspace === 'habits'}
-            className={`workspace-tab ${activeWorkspace === 'habits' ? 'active' : ''}`}
-            onClick={() => changeWorkspace('habits')}
+        <nav className="workspace-tabs" aria-label="Habit Rabbit workspaces">
+          <NavLink
+            to={{ pathname: '/habits', search: location.search }}
+            className={({ isActive }) => `workspace-tab ${isActive ? 'active' : ''}`}
           >
             <CalendarCheck2 size={17} />
             <span><strong>Habits</strong><small>Daily check-in & streaks</small></span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeWorkspace === 'accountability'}
-            className={`workspace-tab ${activeWorkspace === 'accountability' ? 'active' : ''}`}
-            onClick={() => changeWorkspace('accountability')}
+          </NavLink>
+          <NavLink
+            to={{ pathname: '/accountability', search: location.search }}
+            className={({ isActive }) => `workspace-tab ${isActive ? 'active' : ''}`}
           >
             <Crosshair size={17} />
             <span><strong>Accountability</strong><small>Quant developer path</small></span>
-          </button>
+          </NavLink>
         </nav>
 
         {dataLoading ? (
@@ -219,47 +215,52 @@ export default function App() {
             <span>Loading your data…</span>
           </div>
         ) : (
-          activeWorkspace === 'habits' ? (
-            <>
-              <Heatmap
-                signupYear={activeUser?.created_at ? new Date(activeUser.created_at).getFullYear() : new Date().getFullYear()}
-                completedCount={completedCount}
-                maxHabits={habits.length}
-                onCellClick={(dateStr, anchor) => setPopover({ dateStr, anchor })}
-                selectedDate={selectedDate}
-                onSelectDate={(ds) => setSelectedDate(ds)}
-                isDark={isDark}
-              />
+          <Routes>
+            <Route
+              path="/habits"
+              element={
+                <>
+                  <Heatmap
+                    signupYear={activeUser?.created_at ? new Date(activeUser.created_at).getFullYear() : new Date().getFullYear()}
+                    completedCount={completedCount}
+                    maxHabits={habits.length}
+                    onCellClick={(dateStr, anchor) => setPopover({ dateStr, anchor })}
+                    selectedDate={selectedDate}
+                    onSelectDate={(ds) => setSelectedDate(ds)}
+                    isDark={isDark}
+                  />
 
-              <CheckIn
-                date={selectedDate}
-                log={log}
-                habits={habits}
-                onUpdateLog={updateLog}
-                onNavigate={navigateDate}
-                settingsOpen={settingsOpen}
-                onToggleSettings={() => setSettingsOpen(o => !o)}
-                onUpdateHabits={updateHabits}
-              />
+                  <CheckIn
+                    date={selectedDate}
+                    log={log}
+                    habits={habits}
+                    onUpdateLog={updateLog}
+                    onNavigate={navigateDate}
+                    settingsOpen={settingsOpen}
+                    onToggleSettings={() => setSettingsOpen(o => !o)}
+                    onUpdateHabits={updateHabits}
+                  />
 
-              <Stats
-                habits={habits}
-                allLogs={allLogs}
-                todayStr={today()}
-              />
+                  <Stats
+                    habits={habits}
+                    allLogs={allLogs}
+                    todayStr={today()}
+                  />
 
-              <HabitBreakdown
-                habits={habits}
-                allLogs={allLogs}
-                isDark={isDark}
-                onCellClick={handleCellClick}
-                onSelectDate={(ds) => setSelectedDate(ds)}
-                selectedDate={selectedDate}
-              />
-            </>
-          ) : (
-            <Accountability userId={activeUser.id} />
-          )
+                  <HabitBreakdown
+                    habits={habits}
+                    allLogs={allLogs}
+                    isDark={isDark}
+                    onCellClick={handleCellClick}
+                    onSelectDate={(ds) => setSelectedDate(ds)}
+                    selectedDate={selectedDate}
+                  />
+                </>
+              }
+            />
+            <Route path="/accountability" element={<Accountability userId={activeUser.id} />} />
+            <Route path="*" element={<Navigate to={`/habits${location.search}`} replace />} />
+          </Routes>
         )}
       </div>
 
